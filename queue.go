@@ -4,88 +4,79 @@ import "fmt"
 
 // Queue is a queue based on a slice.
 type Queue struct {
-	start int
-	end   int
-	data  []interface{}
+	data []interface{}
 }
 
-func (queue *Queue) Empty() bool {
-	return queue.start == queue.end &&
-		queue.data[queue.start] == nil
+// BufferSize returns the capacity of the queue.
+func (queue *Queue) BufferSize() int {
+	return cap(queue.data)
 }
 
-func (queue *Queue) Count() int {
-	if queue.start == queue.end {
-		if queue.data[queue.start] == nil {
-			return 0
-		}
-
-		return 1
+// SetBufferSize sets the capacity of the queue.
+func (queue *Queue) SetBufferSize(bufferSize int) error {
+	if bufferSize < 0 {
+		return fmt.Errorf(
+			"buffer size is less than 0: %d", bufferSize)
 	}
 
-	return queue.end - queue.start + 1
-}
-
-func (queue *Queue) moveToEnd() {
-	newEnd := len(queue.data) - 1
-	distance := newEnd - queue.end
-
-	for i := queue.end; i >= queue.start; i-- {
-		queue.data[i+distance] = queue.data[i]
-		queue.data[i] = nil
+	if bufferSize < len(queue.data) {
+		return fmt.Errorf(
+			"buffer size is less than the length of the queue: %d",
+			bufferSize)
 	}
 
-	queue.end = newEnd
-	queue.start += distance
-}
+	data := make([]interface{}, bufferSize)
+	data = data[:0]
 
-func (queue *Queue) Enqueue(elem interface{}) error {
-	if elem == nil {
-		return fmt.Errorf("the element is nil")
-	}
-
-	// If the queue is empty.
-	if queue.Empty() {
-		queue.data[queue.start] = elem
-		return nil
-	}
-
-	// If the queue is full.
-	if queue.start == 0 && queue.end == len(queue.data)-1 {
-		tmp := []interface{}{elem}
-
-		tmp = append(tmp, queue.data...)
-		queue.data = tmp
-		queue.data = queue.data[:cap(queue.data)]
-		queue.moveToEnd()
-
-		return nil
-	}
-
-	// If there's some space on the right side.
-	if queue.start == 0 && queue.end < len(queue.data)-1 {
-		queue.moveToEnd()
-	}
-
-	queue.start--
-	queue.data[queue.start] = elem
+	copy(data, queue.data)
+	queue.data = data
 
 	return nil
 }
 
-func (queue *Queue) Dequeue() (interface{}, error) {
-	// If the queue is empty.
-	if queue.Empty() {
-		return nil, fmt.Errorf(
-			"the queue is empty, nothing to dequeue")
+// Clear removes all the elements from the queue.
+func (queue *Queue) Clear() {
+	queue.data = queue.data[:0]
+}
+
+// Length returns the numbers of elements
+// in the queue.
+func (queue *Queue) Length() int {
+	return len(queue.data)
+}
+
+// Peek returns the last element of
+// the queue.
+func (queue *Queue) Peek() interface{} {
+	lastIdx := len(queue.data) - 1
+	lastElem := queue.data[lastIdx]
+
+	return lastElem
+}
+
+// Enqueue puts the element in the end of the queue.
+func (queue *Queue) Enqueue(elem interface{}) {
+	queue.data = append([]interface{}{elem}, queue.data...)
+}
+
+// Dequeue returns the last element of the queue
+// and removes it from the queue.
+func (queue *Queue) Dequeue() interface{} {
+	lastIdx := len(queue.data) - 1
+	lastElem := queue.data[lastIdx]
+
+	queue.data = queue.data[:lastIdx]
+
+	return lastElem
+}
+
+// NewQueue returns a new queue
+// based on a slice.
+func NewQueue(queueCapacity int) *Queue {
+	data := make([]interface{}, queueCapacity)
+	data = data[:0]
+
+	return &Queue{
+		data: data,
 	}
-
-	elem := queue.data[queue.end]
-	queue.data[queue.end] = nil
-
-	if queue.Count() > 1 {
-		queue.end--
-	}
-
-	return elem, nil
 }
