@@ -57,19 +57,28 @@ func (queue *Queue) Enqueue(elem interface{}) {
 
 // Dequeue returns the last element of the queue
 // and removes it from the queue.
-func (queue *Queue) Dequeue() interface{} {
+func (queue *Queue) Dequeue() (interface{}, error) {
+	if queue.Length() <= 0 {
+		return nil, fmt.Errorf("the queue has no elements")
+	}
+
 	lastElem := queue.data[0]
 	queue.data = queue.data[1:]
 
-	return lastElem
+	return lastElem, nil
 }
 
 // NewQueue returns a new queue
 // based on a slice.
-func NewQueue(queueCapacity int) *Queue {
+func NewQueue(queueCapacity int) (*Queue, error) {
+	if queueCapacity < 0 {
+		return nil, fmt.Errorf(
+			"negative capacity value: %d", queueCapacity)
+	}
+
 	data := make([]interface{}, 0, queueCapacity)
 
 	return &Queue{
 		data: data,
-	}
+	}, nil
 }
