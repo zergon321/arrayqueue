@@ -89,11 +89,3 @@ func (queue *Queue) Dequeue() (interface{}, error) {
 
 	return elem, nil
 }
-
-func NewQueue(buffSize int) *Queue {
-	return &Queue{
-		start: 0,
-		end:   0,
-		data:  make([]interface{}, buffSize, buffSize),
-	}
-}
