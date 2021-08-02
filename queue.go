@@ -25,8 +25,7 @@ func (queue *Queue) SetBufferSize(bufferSize int) error {
 			bufferSize)
 	}
 
-	data := make([]interface{}, bufferSize)
-	data = data[:0]
+	data := make([]interface{}, len(queue.data), bufferSize)
 
 	copy(data, queue.data)
 	queue.data = data
@@ -48,24 +47,19 @@ func (queue *Queue) Length() int {
 // Peek returns the last element of
 // the queue.
 func (queue *Queue) Peek() interface{} {
-	lastIdx := len(queue.data) - 1
-	lastElem := queue.data[lastIdx]
-
-	return lastElem
+	return queue.data[0]
 }
 
 // Enqueue puts the element in the end of the queue.
 func (queue *Queue) Enqueue(elem interface{}) {
-	queue.data = append([]interface{}{elem}, queue.data...)
+	queue.data = append(queue.data, elem)
 }
 
 // Dequeue returns the last element of the queue
 // and removes it from the queue.
 func (queue *Queue) Dequeue() interface{} {
-	lastIdx := len(queue.data) - 1
-	lastElem := queue.data[lastIdx]
-
-	queue.data = queue.data[:lastIdx]
+	lastElem := queue.data[0]
+	queue.data = queue.data[1:]
 
 	return lastElem
 }
@@ -73,8 +67,7 @@ func (queue *Queue) Dequeue() interface{} {
 // NewQueue returns a new queue
 // based on a slice.
 func NewQueue(queueCapacity int) *Queue {
-	data := make([]interface{}, queueCapacity)
-	data = data[:0]
+	data := make([]interface{}, 0, queueCapacity)
 
 	return &Queue{
 		data: data,
